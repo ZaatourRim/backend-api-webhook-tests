@@ -1,0 +1,7 @@
+api:
+  base_url: "https://reqres.in"
+  timeout: 10
+
+webhook:
+  base_url: "https://webhook.site"
+  timeout: 10
