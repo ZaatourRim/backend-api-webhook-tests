@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .venv/
 reports/
+# macOS system files
+.DS_Store
