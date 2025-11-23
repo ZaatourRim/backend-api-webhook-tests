@@ -1,3 +1,5 @@
+[![CI - API & Webhook Tests](https://github.com/ZaatourRim/backend-api-webhook-tests/actions/workflows/tests.yml/badge.svg)](https://github.com/ZaatourRim/backend-api-webhook-tests/actions/workflows/tests.yml)
+
 # Backend Test Automation Suite  
 ### Backend REST & Webhook API Test Automation Suite (Python + Pytest)
 
