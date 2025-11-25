@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 import time
 import pytest
+import json
 
 def test_e2e_timestamp_delivery_and_validation(webhook_client):
 
@@ -65,7 +66,48 @@ def test_e2e_timestamp_delivery_and_validation(webhook_client):
         f"x-request-time too old: age={req_age_seconds} seconds."
         f"Event sent at {ts_str}, received at: {now_after.isoformat()}"
         )
+
+def test_correlation_id(webhook_client):
+    '''
+    “Extend your webhook test so that it also sends an X-Correlation-ID header with a UUID, 
+    and then verifies that the stored webhook request contains that same correlation ID
+    (either in headers or body).”
+    '''
+
+    # 1. build headers and payload
+    correlation_id = str(uuid4())
+    headers = {"x-correlation-id": correlation_id}
+    payload = {
+        "event": "correlation_test",
+        "event_id": str(uuid4())
+    }
+    # 2. send webhook event with new headers
+    response = webhook_client.send_event(payload=payload, headers=headers)
+    assert 200 <= response.status_code < 300, (f"unexpected status code from webhook: {response.status_code}, body: {response.text}")
     
-    
+    # 3. poll the API until we retrieve the matching event
+
+    max_attempts = 5
+    metadata = None
+
+    for attempt in range(max_attempts):
+        metadata = webhook_client.retrieve_latest_request()
+        raw_content = metadata.get("content")
+
+        if raw_content:
+            try:
+                content_json = json.loads(raw_content)
+                # Check if this is the event we just sent
+                if content_json.get("event_id") == payload["event_id"]:
+                    break
+            except json.JSONDecodeError:
+                pass
+
+        time.sleep(1)
+
+    assert metadata is not None, "Failed to retrieve webhook metadata"
+    # 4. check if correlation ID is in headers
+    retrieved_headers = metadata.get("headers", {}) # returns a list of headers
+    assert retrieved_headers.get("x-correlation-id")[0] == correlation_id, (f"correlation id mismatch, sent {correlation_id}, got {retrieved_headers.get('x-correlation-id')}")
 
 

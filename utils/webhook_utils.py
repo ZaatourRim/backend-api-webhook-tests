@@ -3,6 +3,7 @@ import logging
 import requests
 import json
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from .config import load_settings, get_env_or_setting
 
@@ -124,14 +125,14 @@ class WebhookClient:
             headers["Api-Key"] = self.api_key
         return headers
 
-    def send_event(self, payload: Dict[str, Any]) -> requests.Response:
+    def send_event(self, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None) -> requests.Response:
         """
         Send a JSON payload to the webhook target URL via POST.
         """
         logger.info("Sending webhook event to %s", self.target_url)
 
         try:
-            response = requests.post(self.target_url, json=payload)
+            response = requests.post(self.target_url, json=payload, headers=headers)
         except requests.RequestException as exc:
             logger.error("Failed to send webhook event: %r", exc)
             raise WebhookClientError(
